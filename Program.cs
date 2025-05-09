@@ -213,7 +213,6 @@ public class PropertyOffer
             Console.WriteLine("У пропозиції немає об'єктів нерухомості.");
             return;
         }
-
         foreach (var property in _offeredProperties)
         {
             Console.WriteLine($"Об'єкт: {property.Address}, {property.Price} грн, {property.Type}, {property.Description}");
@@ -285,32 +284,31 @@ public interface ISearchable
 }
 
 /// <summary>
-/// Представляє агентство нерухомості, яке керує клієнтами, об'єктами нерухомості та пропозиціями.
+/// Керує операціями, пов'язаними з клієнтами агентства нерухомості.
 /// </summary>
-public class RealEstateAgency : ISearchable
+public class ClientManager
 {
     private readonly List<Client> _clients;
-    private readonly List<Property> _properties;
-    private readonly List<PropertyOffer> _offers;
 
     /// <summary>
-    /// Ініціалізує новий екземпляр класу <see cref="RealEstateAgency"/>.
+    /// Ініціалізує новий екземпляр класу <see cref="ClientManager"/>.
     /// </summary>
-    public RealEstateAgency()
+    public ClientManager()
     {
         _clients = new List<Client>();
-        _properties = new List<Property>();
-        _offers = new List<PropertyOffer>();
     }
 
-    #region Client Management
+    /// <summary>
+    /// Отримує список клієнтів лише для читання.
+    /// </summary>
+    public IReadOnlyList<Client> Clients => _clients.AsReadOnly();
 
     /// <summary>
-    /// Додає клієнта до агентства.
+    /// Додає нового клієнта до списку.
     /// </summary>
     /// <param name="client">Клієнт для додавання. Не може бути null.</param>
     /// <exception cref="ArgumentException">Викидається, якщо клієнт є null.</exception>
-    /// <exception cref="InvalidOperationException">Викидається, якщо клієнт з таким ID уже існує.</exception>
+    /// <exception cref="InvalidOperationException">Викидається, якщо клієнт із таким ID уже існує.</exception>
     public void AddClient(Client client)
     {
         if (client == null)
@@ -322,10 +320,10 @@ public class RealEstateAgency : ISearchable
     }
 
     /// <summary>
-    /// Видаляє клієнта з агентства за його ID.
+    /// Видаляє клієнта за його унікальним ідентифікатором.
     /// </summary>
-    /// <param name="clientId">ID клієнта для видалення.</param>
-    /// <exception cref="KeyNotFoundException">Викидається, якщо клієнт не знайдений.</exception>
+    /// <param name="clientId">Унікальний ідентифікатор клієнта.</param>
+    /// <exception cref="KeyNotFoundException">Викидається, якщо клієнт із вказаним ID не знайдений.</exception>
     public void RemoveClient(Guid clientId)
     {
         var client = _clients.FirstOrDefault(c => c.Id == clientId);
@@ -335,14 +333,14 @@ public class RealEstateAgency : ISearchable
     }
 
     /// <summary>
-    /// Оновлює дані існуючого клієнта.
+    /// Оновлює дані клієнта за його унікальним ідентифікатором.
     /// </summary>
-    /// <param name="clientId">ID клієнта для оновлення.</param>
-    /// <param name="firstName">Нове ім'я.</param>
-    /// <param name="lastName">Нове прізвище.</param>
-    /// <param name="phoneNumber">Новий номер телефону.</param>
-    /// <param name="bankAccount">Новий номер банківського рахунку.</param>
-    /// <exception cref="KeyNotFoundException">Викидається, якщо клієнт не знайдений.</exception>
+    /// <param name="clientId">Унікальний ідентифікатор клієнта.</param>
+    /// <param name="firstName">Нове ім'я клієнта.</param>
+    /// <param name="lastName">Нове прізвище клієнта.</param>
+    /// <param name="phoneNumber">Новий номер телефону клієнта.</param>
+    /// <param name="bankAccount">Новий номер банківського рахунку клієнта.</param>
+    /// <exception cref="KeyNotFoundException">Викидається, якщо клієнт із вказаним ID не знайдений.</exception>
     public void UpdateClient(Guid clientId, string firstName, string lastName, string phoneNumber, string bankAccount)
     {
         var client = _clients.FirstOrDefault(c => c.Id == clientId);
@@ -356,11 +354,11 @@ public class RealEstateAgency : ISearchable
     }
 
     /// <summary>
-    /// Отримує клієнта за його ID.
+    /// Отримує клієнта за його унікальним ідентифікатором.
     /// </summary>
-    /// <param name="clientId">ID клієнта для отримання.</param>
-    /// <returns>Клієнт із зазначеним ID.</returns>
-    /// <exception cref="KeyNotFoundException">Викидається, якщо клієнт не знайдений.</exception>
+    /// <param name="clientId">Унікальний ідентифікатор клієнта.</param>
+    /// <returns>Клієнт із вказаним ID.</returns>
+    /// <exception cref="KeyNotFoundException">Викидається, якщо клієнт із вказаним ID не знайдений.</exception>
     public Client GetClient(Guid clientId)
     {
         var client = _clients.FirstOrDefault(c => c.Id == clientId);
@@ -370,7 +368,7 @@ public class RealEstateAgency : ISearchable
     }
 
     /// <summary>
-    /// Виводить усіх клієнтів у консоль.
+    /// Виводить список усіх клієнтів у консоль.
     /// </summary>
     public void GetAllClients()
     {
@@ -380,11 +378,11 @@ public class RealEstateAgency : ISearchable
     }
 
     /// <summary>
-    /// Сортує клієнтів за зазначеним критерієм.
+    /// Сортує клієнтів за вказаним критерієм.
     /// </summary>
-    /// <param name="sortBy">Критерій сортування ("firstname", "lastname" або "bankaccount").</param>
-    /// <returns>Перелік відсортованих клієнтів.</returns>
-    /// <exception cref="ArgumentException">Викидається, якщо параметр сортування є некоректним.</exception>
+    /// <param name="sortBy">Критерій сортування ("firstname", "lastname", "bankaccount").</param>
+    /// <returns>Відсортований перелік клієнтів.</returns>
+    /// <exception cref="ArgumentException">Викидається, якщо критерій сортування некоректний.</exception>
     public IEnumerable<Client> SortClients(string? sortBy = null)
     {
         var clients = _clients.AsEnumerable();
@@ -400,12 +398,30 @@ public class RealEstateAgency : ISearchable
                 throw new ArgumentException("Некоректний параметр сортування.");
         }
     }
-    #endregion
+}
 
-    #region Property Management
+/// <summary>
+/// Керує операціями, пов'язаними з об'єктами нерухомості в агентстві.
+/// </summary>
+public class PropertyManager
+{
+    private readonly List<Property> _properties;
 
     /// <summary>
-    /// Додає об'єкт нерухомості до агентства.
+    /// Ініціалізує новий екземпляр класу <see cref="PropertyManager"/>.
+    /// </summary>
+    public PropertyManager()
+    {
+        _properties = new List<Property>();
+    }
+
+    /// <summary>
+    /// Отримує список об'єктів нерухомості лише для читання.
+    /// </summary>
+    public IReadOnlyList<Property> Properties => _properties.AsReadOnly();
+
+    /// <summary>
+    /// Додає новий об'єкт нерухомості до списку.
     /// </summary>
     /// <param name="property">Об'єкт нерухомості для додавання. Не може бути null.</param>
     /// <exception cref="ArgumentNullException">Викидається, якщо об'єкт нерухомості є null.</exception>
@@ -421,10 +437,10 @@ public class RealEstateAgency : ISearchable
     }
 
     /// <summary>
-    /// Видаляє об'єкт нерухомості з агентства за його ID.
+    /// Видаляє об'єкт нерухомості за його унікальним ідентифікатором.
     /// </summary>
-    /// <param name="propertyId">ID об'єкта нерухомості для видалення.</param>
-    /// <exception cref="KeyNotFoundException">Викидається, якщо об'єкт нерухомості не знайдений.</exception>
+    /// <param name="propertyId">Унікальний ідентифікатор об'єкта нерухомості.</param>
+    /// <exception cref="KeyNotFoundException">Викидається, якщо об'єкт із вказаним ID не знайдений.</exception>
     public void RemoveProperty(Guid propertyId)
     {
         var property = _properties.FirstOrDefault(p => p.Id == propertyId);
@@ -434,14 +450,14 @@ public class RealEstateAgency : ISearchable
     }
 
     /// <summary>
-    /// Оновлює дані існуючого об'єкта нерухомості.
+    /// Оновлює дані об'єкта нерухомості за його унікальним ідентифікатором.
     /// </summary>
-    /// <param name="propertyId">ID об'єкта нерухомості для оновлення.</param>
-    /// <param name="address">Нова адреса.</param>
-    /// <param name="type">Новий тип об'єкта нерухомості.</param>
-    /// <param name="price">Нова ціна.</param>
-    /// <param name="description">Новий опис.</param>
-    /// <exception cref="KeyNotFoundException">Викидається, якщо об'єкт нерухомості не знайдений.</exception>
+    /// <param name="propertyId">Унікальний ідентифікатор об'єкта нерухомості.</param>
+    /// <param name="address">Нова адреса об'єкта.</param>
+    /// <param name="type">Новий тип об'єкта.</param>
+    /// <param name="price">Нова ціна об'єкта.</param>
+    /// <param name="description">Новий опис об'єкта.</param>
+    /// <exception cref="KeyNotFoundException">Викидається, якщо об'єкт із вказаним ID не знайдений.</exception>
     public void UpdateProperty(Guid propertyId, string address, PropertyType type, decimal price, string description)
     {
         var property = _properties.FirstOrDefault(p => p.Id == propertyId);
@@ -455,16 +471,11 @@ public class RealEstateAgency : ISearchable
     }
 
     /// <summary>
-    /// Отримує список усіх об'єктів нерухомості в агентстві лише для читання.
+    /// Отримує об'єкт нерухомості за його унікальним ідентифікатором.
     /// </summary>
-    public IReadOnlyList<Property> Properties => _properties.AsReadOnly();
-
-    /// <summary>
-    /// Отримує об'єкт нерухомості за його ID.
-    /// </summary>
-    /// <param name="propertyId">ID об'єкта нерухомості для отримання.</param>
-    /// <returns>Об'єкт нерухомості із зазначеним ID.</returns>
-    /// <exception cref="KeyNotFoundException">Викидається, якщо об'єкт нерухомості не знайдений.</exception>
+    /// <param name="propertyId">Унікальний ідентифікатор об'єкта нерухомості.</param>
+    /// <returns>Об'єкт нерухомості із вказаним ID.</returns>
+    /// <exception cref="KeyNotFoundException">Викидається, якщо об'єкт із вказаним ID не знайдений.</exception>
     public Property GetProperty(Guid propertyId)
     {
         var property = _properties.FirstOrDefault(p => p.Id == propertyId);
@@ -474,7 +485,7 @@ public class RealEstateAgency : ISearchable
     }
 
     /// <summary>
-    /// Виводить усі об'єкти нерухомості в консоль.
+    /// Виводить список усіх об'єктів нерухомості у консоль.
     /// </summary>
     public void GetAllProperties()
     {
@@ -484,11 +495,11 @@ public class RealEstateAgency : ISearchable
     }
 
     /// <summary>
-    /// Сортує об'єкти нерухомості за зазначеним критерієм.
+    /// Сортує об'єкти нерухомості за вказаним критерієм.
     /// </summary>
-    /// <param name="sortBy">Критерій сортування ("type" або "price").</param>
-    /// <returns>Перелік відсортованих об'єктів нерухомості.</returns>
-    /// <exception cref="ArgumentException">Викидається, якщо параметр сортування є некоректним.</exception>
+    /// <param name="sortBy">Критерій сортування ("type", "price").</param>
+    /// <returns>Відсортований перелік об'єктів нерухомості.</returns>
+    /// <exception cref="ArgumentException">Викидається, якщо критерій сортування некоректний.</exception>
     public IEnumerable<Property> SortProperties(string? sortBy = null)
     {
         var properties = _properties.AsEnumerable();
@@ -502,15 +513,42 @@ public class RealEstateAgency : ISearchable
                 throw new ArgumentException("Некоректний параметр сортування.");
         }
     }
-    #endregion
+}
 
-    #region Offer Management
+/// <summary>
+/// Керує пропозиціями нерухомості для клієнтів агентства.
+/// </summary>
+public class OfferManager
+{
+    private readonly List<PropertyOffer> _offers;
+    private readonly PropertyManager _propertyManager;
 
     /// <summary>
-    /// Створює нову пропозицію нерухомості для клієнта.
+    /// Ініціалізує новий екземпляр класу <see cref="OfferManager"/>.
     /// </summary>
-    /// <param name="client">Клієнт, для якого створено пропозицію.</param>
-    /// <returns>Створена пропозиція нерухомості.</returns>
+    /// <param name="propertyManager">Менеджер об'єктів нерухомості. Не може бути null.</param>
+    /// <exception cref="ArgumentNullException">Викидається, якщо propertyManager є null.</exception>
+    public OfferManager(PropertyManager propertyManager)
+    {
+        _offers = new List<PropertyOffer>();
+        _propertyManager = propertyManager ?? throw new ArgumentNullException(nameof(propertyManager));
+    }
+
+    /// <summary>
+    /// Отримує список пропозицій лише для читання.
+    /// </summary>
+    /// <returns>Список пропозицій.</returns>
+    public IReadOnlyList<PropertyOffer> GetOffers()
+    {
+        return _offers.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Створює нову пропозицію для клієнта.
+    /// </summary>
+    /// <param name="client">Клієнт, для якого створюється пропозиція. Не може бути null.</param>
+    /// <returns>Створена пропозиція.</returns>
+    /// <exception cref="ArgumentException">Викидається, якщо клієнт є null.</exception>
     public PropertyOffer CreateOffer(Client client)
     {
         var offer = new PropertyOffer(client);
@@ -521,8 +559,8 @@ public class RealEstateAgency : ISearchable
     /// <summary>
     /// Видаляє об'єкт нерухомості з пропозиції клієнта.
     /// </summary>
-    /// <param name="clientId">ID клієнта, чия пропозиція змінюється.</param>
-    /// <param name="propertyId">ID об'єкта нерухомості для видалення.</param>
+    /// <param name="clientId">Унікальний ідентифікатор клієнта.</param>
+    /// <param name="propertyId">Унікальний ідентифікатор об'єкта нерухомості.</param>
     /// <exception cref="KeyNotFoundException">Викидається, якщо пропозиція для клієнта не знайдена.</exception>
     /// <exception cref="InvalidOperationException">Викидається, якщо об'єкт не знайдено в пропозиції.</exception>
     public void RejectPropertyOffer(Guid clientId, Guid propertyId)
@@ -537,37 +575,72 @@ public class RealEstateAgency : ISearchable
     }
 
     /// <summary>
-    /// Знаходить об'єкти нерухомості, які відповідають зазначеному типу та ціні.
+    /// Знаходить об'єкти нерухомості, що відповідають вказаному типу та ціні.
     /// </summary>
-    /// <param name="type">Тип об'єкта нерухомості для пошуку.</param>
-    /// <param name="Price">Максимальна ціна об'єктів нерухомості.</param>
-    /// <returns>Перелік об'єктів нерухомості, що відповідають умовам.</returns>
-    /// <exception cref="ArgumentException">Викидається, якщо жоден об'єкт не відповідає критеріям.</exception>
-    public IEnumerable<Property> FindSuitableProperties(PropertyType type, decimal Price)
+    /// <param name="type">Тип об'єкта нерухомості.</param>
+    /// <param name="price">Максимальна ціна об'єкта.</param>
+    /// <returns>Перелік відповідних об'єктів нерухомості.</returns>
+    /// <exception cref="ArgumentException">Викидається, якщо не знайдено об'єктів, що відповідають критеріям.</exception>
+    public IEnumerable<Property> FindSuitableProperties(PropertyType type, decimal price)
     {
-        var suitableProperties = _properties.Where(p => p.Type == type && p.Price <= Price);
+        var suitableProperties = _propertyManager.Properties
+            .Where(p => p.Type == type && p.Price <= price);
         if (!suitableProperties.Any())
         {
             throw new ArgumentException("Не знайдено об'єктів, що відповідають критеріям.");
         }
         return suitableProperties;
     }
-    #endregion
+}
 
-    #region Search
+/// <summary>
+/// Керує пошуком клієнтів і об'єктів нерухомості в агентстві.
+/// </summary>
+public class SearchManager : ISearchable
+{
+    private readonly ClientManager _clientManager;
+    private readonly PropertyManager _propertyManager;
+    private readonly OfferManager _offerManager;
 
     /// <summary>
-    /// Шукає клієнтів за ключовим словом у їхньому імені, прізвищі, номері телефону або банківському рахунку.
+    /// Ініціалізує новий екземпляр класу <see cref="SearchManager"/>.
     /// </summary>
-    /// <param name="keyword">Ключове слово для пошуку. Не може бути порожнім або складатися з пробілів.</param>
+    /// <param name="clientManager">Менеджер клієнтів. Не може бути null.</param>
+    /// <param name="propertyManager">Менеджер об'єктів нерухомості. Не може бути null.</param>
+    /// <param name="offerManager">Менеджер пропозицій. Не може бути null.</param>
+    /// <exception cref="ArgumentNullException">Викидається, якщо будь-який із менеджерів є null.</exception>
+    public SearchManager(ClientManager clientManager, PropertyManager propertyManager, OfferManager offerManager)
+    {
+        if (clientManager == null)
+        {
+            throw new ArgumentNullException(nameof(clientManager));
+        }
+        _clientManager = clientManager;
+
+        if (propertyManager == null)
+        {
+            throw new ArgumentNullException(nameof(propertyManager));
+        }
+        _propertyManager = propertyManager;
+
+        if (offerManager == null)
+        {
+            throw new ArgumentNullException(nameof(offerManager));
+        }
+        _offerManager = offerManager;
+    }
+
+    /// <summary>
+    /// Шукає клієнтів за ключовим словом.
+    /// </summary>
+    /// <param name="keyword">Ключове слово для пошуку.</param>
     /// <returns>Перелік клієнтів, що відповідають умовам.</returns>
-    /// <exception cref="ArgumentException">Викидається, якщо клієнти не знайдені або ключове слово є некоректним.</exception>
     public IEnumerable<Client> SearchClients(string keyword)
     {
         if (string.IsNullOrWhiteSpace(keyword))
             return Enumerable.Empty<Client>();
 
-        var results = _clients.Where(c =>
+        var results = _clientManager.Clients.Where(c =>
             (c.FirstName != null && c.FirstName.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
             (c.LastName != null && c.LastName.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
             (c.PhoneNumber != null && c.PhoneNumber.Contains(keyword)) ||
@@ -580,19 +653,24 @@ public class RealEstateAgency : ISearchable
     }
 
     /// <summary>
-    /// Шукає об'єкти нерухомості за ключовим словом у їхній адресі або описі.
+    /// Шукає об'єкти нерухомості за ключовим словом.
     /// </summary>
-    /// <param name="keyword">Ключове слово для пошуку. Не може бути порожнім або складатися з пробілів.</param>
+    /// <param name="keyword">Ключове слово для пошуку.</param>
     /// <returns>Перелік об'єктів нерухомості, що відповідають умовам.</returns>
-    /// <exception cref="ArgumentException">Викидається, якщо об'єкти не знайдені або ключове слово є некоректним.</exception>
     public IEnumerable<Property> SearchProperties(string keyword)
     {
         if (string.IsNullOrWhiteSpace(keyword))
             return Enumerable.Empty<Property>();
 
-        var results = _properties.Where(p =>
-            (p.Address != null && p.Address.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
-            (p.Description != null && p.Description.Contains(keyword, StringComparison.OrdinalIgnoreCase)));
+        bool isPrice = decimal.TryParse(keyword, out decimal price);
+
+        bool isType = Enum.TryParse<PropertyType>(keyword, true, out PropertyType propertyType);
+
+        var results = _propertyManager.Properties.Where(p =>
+                (p.Address != null && p.Address.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
+                (p.Description != null && p.Description.Contains(keyword, StringComparison.OrdinalIgnoreCase)) ||
+                (isPrice && p.Price == price) ||
+                (isType && p.Type == propertyType));
 
         if (!results.Any())
             throw new ArgumentException($"Об'єкти нерухомості не знайдені за ключовим словом '{keyword}'.");
@@ -603,9 +681,8 @@ public class RealEstateAgency : ISearchable
     /// <summary>
     /// Шукає як клієнтів, так і об'єкти нерухомості за ключовим словом.
     /// </summary>
-    /// <param name="keyword">Ключове слово для пошуку. Не може бути порожнім або складатися з пробілів.</param>
+    /// <param name="keyword">Ключове слово для пошуку.</param>
     /// <returns>Перелік клієнтів і об'єктів нерухомості як об'єктів, що відповідають умовам.</returns>
-    /// <exception cref="ArgumentException">Викидається, якщо результати не знайдені або ключове слово є некоректним.</exception>
     public IEnumerable<object> SearchAll(string keyword)
     {
         if (string.IsNullOrWhiteSpace(keyword))
@@ -634,37 +711,60 @@ public class RealEstateAgency : ISearchable
     }
 
     /// <summary>
-    /// Виконує розширений пошук клієнтів на основі зазначених критеріїв.
+    /// Виконує розширений пошук клієнтів за заданими критеріями.
     /// </summary>
-    /// <param name="criteria">Критерії пошуку. Не можуть бути null.</param>
-    /// <returns>Перелік клієнтів, що відповідають умовам.</returns>
+    /// <param name="criteria">Критерії пошуку клієнтів. Не може бути null.</param>
+    /// <returns>Перелік клієнтів, що відповідають критеріям.</returns>
     /// <exception cref="ArgumentNullException">Викидається, якщо критерії є null.</exception>
-    /// <exception cref="ArgumentException">Викидається, якщо жоден клієнт не відповідає критеріям.</exception>
+    /// <exception cref="ArgumentException">Викидається, якщо клієнтів не знайдено за критеріями.</exception>
     public IEnumerable<Client> AdvancedClientSearch(ClientSearchCriteria criteria)
     {
         if (criteria == null)
             throw new ArgumentNullException(nameof(criteria));
 
-        var results = _clients.Where(c =>
-            (string.IsNullOrEmpty(criteria.FirstName) ||
-                (c.FirstName != null && c.FirstName.Equals(criteria.FirstName, StringComparison.OrdinalIgnoreCase))) &&
-            (string.IsNullOrEmpty(criteria.LastName) ||
-                (c.LastName != null && c.LastName.Equals(criteria.LastName, StringComparison.OrdinalIgnoreCase))) &&
-            (string.IsNullOrEmpty(criteria.PhoneNumber) ||
-                (c.PhoneNumber != null && c.PhoneNumber.Contains(criteria.PhoneNumber, StringComparison.OrdinalIgnoreCase))) &&
-            (string.IsNullOrEmpty(criteria.BankAccount) ||
-                (c.BankAccount != null && c.BankAccount.Contains(criteria.BankAccount, StringComparison.OrdinalIgnoreCase))) &&
-            (criteria.DesiredPropertyType == null ||
-                _offers.Any(o => o.Client.Id == c.Id &&
-                    o.OfferedProperties.Any(p => p.Type == criteria.DesiredPropertyType))) &&
-            (criteria.Price == null ||
-                _offers.Any(o => o.Client.Id == c.Id &&
-                    o.OfferedProperties.Any(p => p.Price <= criteria.Price))));
+        IEnumerable<Client> results = _clientManager.Clients;
+
+        if (!string.IsNullOrEmpty(criteria.FirstName))
+        {
+            results = results.Where(c => c.FirstName != null &&
+                c.FirstName.Equals(criteria.FirstName, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrEmpty(criteria.LastName))
+        {
+            results = results.Where(c => c.LastName != null &&
+                c.LastName.Equals(criteria.LastName, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrEmpty(criteria.PhoneNumber))
+        {
+            var phoneResults = SearchClients(criteria.PhoneNumber);
+            results = results.Intersect(phoneResults);
+        }
+
+        if (!string.IsNullOrEmpty(criteria.BankAccount))
+        {
+            var bankResults = SearchClients(criteria.BankAccount);
+            results = results.Intersect(bankResults);
+        }
+
+        if (criteria.DesiredPropertyType != null)
+        {
+            results = results.Where(c => _offerManager.GetOffers().Any(o =>
+                o.Client.Id == c.Id &&
+                o.OfferedProperties.Any(p => p.Type == criteria.DesiredPropertyType)));
+        }
+
+        if (criteria.Price != null)
+        {
+            results = results.Where(c => _offerManager.GetOffers().Any(o =>
+                o.Client.Id == c.Id &&
+                o.OfferedProperties.Any(p => p.Price <= criteria.Price)));
+        }
 
         if (!results.Any())
             throw new ArgumentException("Клієнтів не знайдено за зазначеними критеріями.");
 
         return results;
     }
-    #endregion
 }
