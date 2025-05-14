@@ -595,7 +595,7 @@ public class OfferManager
 
 /// <summary>
 /// Керує пошуком клієнтів і об'єктів нерухомості в агентстві.
-/// </summary>
+/// </summary> 
 public class SearchManager : ISearchable
 {
     private readonly ClientManager _clientManager;
